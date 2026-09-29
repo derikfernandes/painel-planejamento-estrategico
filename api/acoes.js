@@ -10,7 +10,7 @@ module.exports = async function (req, res) {
     }
     if (req.method === "POST") {
       try {
-        const data = await postarScript({ acao: "atualizar", ...(req.body || {}) });
+        const data = await postarScript({ ...(req.body || {}), acao: "atualizar" });
         limparCache();
         res.status(200).json(data);
       } catch (error) {

@@ -86,8 +86,8 @@ function atualizar_(pedido) {
     if (pedido.quando != null) gravarQuando_(sh, linha, String(pedido.quando));
     if (pedido.divisao != null) sh.getRange(linha, 6).setValue(String(pedido.divisao));
     if (pedido.responsavel != null) sh.getRange(linha, 8).setValue(String(pedido.responsavel));
-    if (pedido.acao != null) {
-      var novoTitulo = String(pedido.acao).trim();
+    if (pedido.novoTitulo != null) {
+      var novoTitulo = String(pedido.novoTitulo).trim();
       if (!novoTitulo) return { ok: false, erro: "O título não pode ficar vazio." };
       sh.getRange(linha, 2).setValue(novoTitulo);
     }

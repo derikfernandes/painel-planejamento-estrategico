@@ -559,13 +559,13 @@ async function salvar(linha) {
       aviso.textContent = "O título não pode ficar vazio.";
       return;
     }
-    payload.acao = rascunho.acao.trim();
+    payload.novoTitulo = rascunho.acao.trim();
   }
   if (rascunho.acompanhamento != null && rascunho.acompanhamento !== (item.acompanhamento || "")) {
     payload.acompanhamento = rascunho.acompanhamento;
   }
   if (rascunho.nota) payload.nota = rascunho.nota;
-  const substituiu = ["status", "quando", "divisao", "responsavel", "acao", "acompanhamento"].some((campo) => campo in payload);
+  const substituiu = ["status", "quando", "divisao", "responsavel", "novoTitulo", "acompanhamento"].some((campo) => campo in payload);
   if (!substituiu && !rascunho.nota) {
     aviso.textContent = "Nada novo para gravar.";
     return;
