@@ -248,15 +248,48 @@ input:focus, select:focus { outline: 2px solid #d7c4a6; border-color: transparen
   border: 1px solid var(--linha);
 }
 .contexto { color: var(--mudo); font-size: 14px; margin: 8px 0; }
-.historico {
+.bloco-editavel { position: relative; margin-top: 8px; }
+.rotulo-campo {
+  margin: 0 40px 4px 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mudo);
+}
+.acao-titulo, .acao-editavel {
+  margin: 0 40px 0 0;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.3;
+}
+.acao-editavel { min-height: 72px; }
+.historico, .historico-editavel {
   white-space: pre-wrap;
   background: #faf7f2;
   border-radius: 12px;
-  padding: 12px;
+  padding: 12px 42px 12px 12px;
   max-height: 280px;
   overflow: auto;
   font-size: 15px;
+  width: 100%;
 }
+.historico-editavel { min-height: 140px; }
+.lapis {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--linha);
+  background: #fff;
+  color: var(--tinta);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+.lapis[aria-pressed="true"] { background: var(--tinta); color: #fff; border-color: var(--tinta); }
 .grade-edicao { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .grade-edicao .largo { grid-column: 1 / -1; }
 textarea {

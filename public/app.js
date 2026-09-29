@@ -247,6 +247,8 @@ function opcoesStatus(atual) {
     .join("");
 }
 
+const LAPIS = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+
 function ficha(item) {
   const rascunho = state.rascunhos[item.linha] || {};
   const status = rascunho.status ?? item.status;
@@ -254,11 +256,26 @@ function ficha(item) {
   const responsavel = rascunho.responsavel ?? item.responsavel;
   const divisao = rascunho.divisao ?? item.divisao;
   const nota = rascunho.nota ?? "";
-  const historico = item.acompanhamento || "Ainda não há anotação de acompanhamento.";
+  const acao = rascunho.acao ?? item.acao;
+  const historico = rascunho.acompanhamento ?? item.acompanhamento ?? "";
+  const titulo = rascunho.liberadoAcao
+    ? `<textarea class="acao-editavel" data-campo="acao">${escapeHtml(acao)}</textarea>`
+    : `<p class="acao-titulo">${escapeHtml(acao)}</p>`;
+  const comentarios = rascunho.liberadoHistorico
+    ? `<textarea class="historico-editavel" data-campo="acompanhamento">${escapeHtml(historico)}</textarea>`
+    : `<div class="historico" tabindex="0">${escapeHtml(historico || "Ainda não há anotação de acompanhamento.")}</div>`;
   return `
     <div class="ficha" data-linha="${item.linha}">
+      <div class="bloco-editavel">
+        <p class="rotulo-campo">O que fazer</p>
+        ${titulo}
+        <button type="button" class="lapis" data-lapis="acao" data-linha="${item.linha}" aria-pressed="${rascunho.liberadoAcao ? "true" : "false"}" aria-label="Editar o que fazer">${LAPIS}</button>
+      </div>
       <p class="contexto">${escapeHtml(item.estrategia || "Sem estratégia")}${item.medida ? " · " + escapeHtml(item.medida) : ""}</p>
-      <div class="historico" tabindex="0">${escapeHtml(historico)}</div>
+      <div class="bloco-editavel">
+        ${comentarios}
+        <button type="button" class="lapis" data-lapis="historico" data-linha="${item.linha}" aria-pressed="${rascunho.liberadoHistorico ? "true" : "false"}" aria-label="Editar comentários anteriores">${LAPIS}</button>
+      </div>
       <div class="grade-edicao">
         <label>Status <em class="marca">substitui</em><select data-campo="status">${opcoesStatus(status)}</select></label>
         <label>Quando <em class="marca">substitui</em><input data-campo="quando" value="${escapeHtml(quando)}" placeholder="dd/mm/aaaa" /></label>
@@ -268,7 +285,7 @@ function ficha(item) {
           <textarea data-campo="nota" placeholder="O que ficou decidido hoje. Entra no final, sem apagar o histórico.">${escapeHtml(nota)}</textarea>
         </label>
       </div>
-      <p class="regra-gravacao">Status, prazo, divisão e responsável substituem a célula. A anotação é somada ao acompanhamento.</p>
+      <p class="regra-gravacao">O título e os comentários antigos só mudam pelo lápis e substituem a célula. A anotação nova é somada no final.</p>
       <p class="aviso" data-aviso></p>
       <div class="modal-acoes">
         <button type="button" class="btn btn-solido" data-salvar="${item.linha}">Salvar na planilha</button>
@@ -500,15 +517,19 @@ async function carregar() {
 }
 
 function lerRascunho(linha) {
+  const previo = state.rascunhos[linha] || {};
   const fichaEl = document.querySelector(`.ficha[data-linha="${linha}"]`);
-  if (!fichaEl) return state.rascunhos[linha] || {};
-  const valor = (campo) => fichaEl.querySelector(`[data-campo="${campo}"]`).value;
+  if (!fichaEl) return previo;
+  const campo = (nome) => fichaEl.querySelector(`[data-campo="${nome}"]`);
   return {
-    status: valor("status"),
-    quando: valor("quando").trim(),
-    divisao: valor("divisao").trim(),
-    responsavel: valor("responsavel").trim(),
-    nota: valor("nota").trim(),
+    ...previo,
+    status: campo("status").value,
+    quando: campo("quando").value.trim(),
+    divisao: campo("divisao").value.trim(),
+    responsavel: campo("responsavel").value.trim(),
+    nota: campo("nota").value.trim(),
+    acao: campo("acao") ? campo("acao").value : previo.acao,
+    acompanhamento: campo("acompanhamento") ? campo("acompanhamento").value : previo.acompanhamento,
   };
 }
 
@@ -533,8 +554,18 @@ async function salvar(linha) {
   if (rascunho.quando !== String(item.quando || "").trim()) payload.quando = rascunho.quando;
   if (rascunho.divisao !== String(item.divisao || "").trim()) payload.divisao = rascunho.divisao;
   if (rascunho.responsavel !== String(item.responsavel || "").trim()) payload.responsavel = rascunho.responsavel;
+  if (rascunho.acao != null && rascunho.acao.trim() !== item.acao.trim()) {
+    if (!rascunho.acao.trim()) {
+      aviso.textContent = "O título não pode ficar vazio.";
+      return;
+    }
+    payload.acao = rascunho.acao.trim();
+  }
+  if (rascunho.acompanhamento != null && rascunho.acompanhamento !== (item.acompanhamento || "")) {
+    payload.acompanhamento = rascunho.acompanhamento;
+  }
   if (rascunho.nota) payload.nota = rascunho.nota;
-  const substituiu = ["status", "quando", "divisao", "responsavel"].some((campo) => campo in payload);
+  const substituiu = ["status", "quando", "divisao", "responsavel", "acao", "acompanhamento"].some((campo) => campo in payload);
   if (!substituiu && !rascunho.nota) {
     aviso.textContent = "Nada novo para gravar.";
     return;
@@ -608,6 +639,22 @@ async function abrirGravacao() {
 }
 
 document.addEventListener("click", (evento) => {
+  const lapis = evento.target.closest("[data-lapis]");
+  if (lapis) {
+    const linha = Number(lapis.dataset.linha);
+    const item = state.itens.find((atual) => atual.linha === linha);
+    const atual = lerRascunho(linha);
+    if (lapis.dataset.lapis === "acao") {
+      atual.liberadoAcao = !atual.liberadoAcao;
+      if (atual.acao == null) atual.acao = item.acao;
+    } else {
+      atual.liberadoHistorico = !atual.liberadoHistorico;
+      if (atual.acompanhamento == null) atual.acompanhamento = item.acompanhamento || "";
+    }
+    state.rascunhos[linha] = atual;
+    render();
+    return;
+  }
   const kpi = evento.target.closest("[data-foco]");
   if (kpi) {
     state.foco = state.foco === kpi.dataset.foco ? "alerta" : kpi.dataset.foco;
