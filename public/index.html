@@ -62,8 +62,8 @@
   <dialog id="modal">
     <form method="dialog" id="form-gravacao">
       <h2>Gravar alterações na planilha</h2>
-      <p class="modal-texto">O painel já lê a planilha. Para o que for digitado na reunião voltar para a célula, falta ligar a gravação uma vez.</p>
-      <ol>
+      <p class="modal-texto" id="modal-texto">O painel já lê a planilha. Para o que for digitado na reunião voltar para a célula, falta ligar a gravação uma vez.</p>
+      <ol id="passos-gravacao">
         <li>Abra a planilha e vá em <strong>Extensões → Apps Script</strong>.</li>
         <li>Apague o que estiver lá, cole o código abaixo e salve.</li>
         <li>Clique em <strong>Implantar → Nova implantação → App da Web</strong>.</li>
@@ -71,14 +71,14 @@
         <li>Autorize e cole aqui a URL que termina com <code>/exec</code>.</li>
       </ol>
       <button type="button" class="btn" id="btn-copiar-script">Copiar código do Apps Script</button>
-      <label class="url-label">
+      <label class="url-label" id="bloco-url">
         <span>URL do app da Web</span>
         <input id="script-url" type="url" placeholder="https://script.google.com/macros/s/…/exec" />
       </label>
       <p class="erro" id="erro-config"></p>
       <div class="modal-acoes">
         <button type="button" class="btn" id="btn-fechar-modal">Agora não</button>
-        <button type="submit" class="btn btn-solido">Ativar gravação</button>
+        <button type="submit" class="btn btn-solido" id="btn-ativar">Ativar gravação</button>
       </div>
     </form>
   </dialog>

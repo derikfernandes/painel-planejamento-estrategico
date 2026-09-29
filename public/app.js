@@ -630,11 +630,40 @@ function montarPauta() {
   return linhas.join("\n");
 }
 
+function passosIniciais() {
+  return [
+    "Abra a planilha e vá em <strong>Extensões → Apps Script</strong>.",
+    "Apague o que estiver lá, cole o código abaixo e salve.",
+    "Clique em <strong>Implantar → Nova implantação → App da Web</strong>.",
+    "Execute como <strong>você</strong> e deixe o acesso em <strong>Qualquer pessoa</strong>.",
+    "Autorize e cole aqui a URL que termina com <code>/exec</code>.",
+  ];
+}
+
+function passosVersao() {
+  return [
+    "No Apps Script, salve o código novo.",
+    "Abra <strong>Implantar → Gerenciar implantações</strong>.",
+    "No lápis da implantação que já existe, escolha <strong>Nova versão</strong> e implante.",
+    "Mantenha executar como você e acesso para qualquer pessoa.",
+    "Não crie outra implantação: a URL nova não substitui a que o painel já usa.",
+  ];
+}
+
 async function abrirGravacao() {
   const config = await fetch("/api/config").then((resposta) => resposta.json());
+  const travada = Boolean(config.travada);
   state.scriptUrl = config.scriptUrl || "";
-  $("script-url").value = state.scriptUrl;
   $("erro-config").textContent = "";
+  $("modal-texto").textContent = travada
+    ? "A gravação neste endereço já está ligada no servidor. Colar outra URL aqui não muda a implantação que o painel chama."
+    : "O painel já lê a planilha. Para o que for digitado na reunião voltar para a célula, falta ligar a gravação uma vez.";
+  $("passos-gravacao").innerHTML = (travada ? passosVersao() : passosIniciais())
+    .map((passo) => `<li>${passo}</li>`)
+    .join("");
+  $("bloco-url").hidden = travada;
+  $("btn-ativar").hidden = travada;
+  if (!travada) $("script-url").value = state.scriptUrl;
   $("modal").showModal();
 }
 

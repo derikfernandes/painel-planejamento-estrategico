@@ -58,14 +58,23 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === "GET" && url.pathname === "/api/config") {
       const config = planilha.lerConfig();
+      const travada = Boolean(process.env.VERCEL);
       return send(res, 200, JSON.stringify({
-        scriptUrl: config.scriptUrl || "",
+        scriptUrl: travada ? "" : config.scriptUrl || "",
         gravacao: Boolean(config.scriptUrl),
-        ips: ipsLocais(),
+        travada,
+        ips: travada ? [] : ipsLocais(),
         planilha: planilha.PLANILHA_URL,
       }));
     }
     if (req.method === "POST" && url.pathname === "/api/config") {
+      if (process.env.VERCEL) {
+        return send(res, 400, JSON.stringify({
+          ok: false,
+          travada: true,
+          erro: "Neste endereço a gravação já está ligada. Não cole outra URL: publique uma nova versão da implantação que já existe.",
+        }));
+      }
       const body = await lerCorpo(req);
       const scriptUrl = String(body.scriptUrl || "").trim();
       if (scriptUrl && !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec\/?$/.test(scriptUrl)) {

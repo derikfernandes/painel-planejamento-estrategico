@@ -16,15 +16,25 @@ module.exports = async function (req, res) {
   try {
     if (req.method === "GET") {
       const config = lerConfig();
+      const travada = Boolean(process.env.VERCEL);
       res.status(200).json({
-        scriptUrl: process.env.VERCEL ? "" : config.scriptUrl || "",
+        scriptUrl: travada ? "" : config.scriptUrl || "",
         gravacao: Boolean(config.scriptUrl),
-        ips: process.env.VERCEL ? [] : ipsLocais(),
+        travada,
+        ips: travada ? [] : ipsLocais(),
         planilha: PLANILHA_URL,
       });
       return;
     }
     if (req.method === "POST") {
+      if (process.env.VERCEL) {
+        res.status(400).json({
+          ok: false,
+          travada: true,
+          erro: "Neste endereço a gravação já está ligada. Não cole outra URL: publique uma nova versão da implantação que já existe.",
+        });
+        return;
+      }
       const scriptUrl = String((req.body || {}).scriptUrl || "").trim();
       if (scriptUrl && !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec\/?$/.test(scriptUrl)) {
         res.status(400).json({ ok: false, erro: "Cole a URL que termina com /exec" });
