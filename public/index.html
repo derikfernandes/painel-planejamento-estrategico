@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Acompanhamento · Planejamento Estratégico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,620&family=Outfit:wght@380;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topo">
+    <div>
+      <p class="olho">Controladoria Geral do Município</p>
+      <h1>Acompanhamento do planejamento</h1>
+      <p class="sub" id="resumo">Carregando a planilha…</p>
+    </div>
+    <div class="topo-acoes">
+      <p class="sync" id="sync"></p>
+      <button type="button" class="btn" id="btn-atualizar">Atualizar</button>
+      <button type="button" class="btn" id="btn-pauta">Copiar pauta</button>
+      <button type="button" class="btn btn-solido" id="btn-gravacao">Gravação</button>
+      <a class="btn" id="link-planilha" href="#" target="_blank" rel="noreferrer">Abrir planilha</a>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Situação dos prazos"></section>
+
+  <section class="filtros">
+    <div class="chips" id="divisoes" aria-label="Divisão ou assessoria"></div>
+    <div class="filtros-linha">
+      <label class="busca">
+        <span>Buscar</span>
+        <input id="busca" type="search" placeholder="Ação, responsável ou acompanhamento" />
+      </label>
+      <label>
+        <span>Estratégia</span>
+        <select id="estrategia"></select>
+      </label>
+      <label>
+        <span>Apresentação</span>
+        <select id="apresentacao">
+          <option value="">Todas</option>
+        </select>
+      </label>
+      <label>
+        <span>Janela de vencimento</span>
+        <select id="horizonte">
+          <option value="7">Próximos 7 dias</option>
+          <option value="14">Próximos 14 dias</option>
+          <option value="30">Próximos 30 dias</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="graficos" id="graficos" aria-label="Gráficos"></section>
+
+  <main id="painel"></main>
+
+  <dialog id="modal">
+    <form method="dialog" id="form-gravacao">
+      <h2>Gravar alterações na planilha</h2>
+      <p class="modal-texto">O painel já lê a planilha. Para o que for digitado na reunião voltar para a célula, falta ligar a gravação uma vez.</p>
+      <ol>
+        <li>Abra a planilha e vá em <strong>Extensões → Apps Script</strong>.</li>
+        <li>Apague o que estiver lá, cole o código abaixo e salve.</li>
+        <li>Clique em <strong>Implantar → Nova implantação → App da Web</strong>.</li>
+        <li>Execute como <strong>você</strong> e deixe o acesso em <strong>Qualquer pessoa</strong>.</li>
+        <li>Autorize e cole aqui a URL que termina com <code>/exec</code>.</li>
+      </ol>
+      <button type="button" class="btn" id="btn-copiar-script">Copiar código do Apps Script</button>
+      <label class="url-label">
+        <span>URL do app da Web</span>
+        <input id="script-url" type="url" placeholder="https://script.google.com/macros/s/…/exec" />
+      </label>
+      <p class="erro" id="erro-config"></p>
+      <div class="modal-acoes">
+        <button type="button" class="btn" id="btn-fechar-modal">Agora não</button>
+        <button type="submit" class="btn btn-solido">Ativar gravação</button>
+      </div>
+    </form>
+  </dialog>
+
+  <p class="toast" id="toast" role="status"></p>
+  <script src="/app.js"></script>
+</body>
+</html>
