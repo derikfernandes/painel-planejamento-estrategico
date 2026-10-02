@@ -110,19 +110,21 @@ function atualizar_(pedido) {
 }
 
 function gravarQuando_(sh, linha, texto) {
-  var m = texto.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  var limpo = String(texto || "").trim().replace(/^'/, "");
+  var range = sh.getRange(linha, 4);
+  var m = limpo.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (!m) {
-    sh.getRange(linha, 4).setValue(texto.trim());
+    range.setValue(limpo);
     return;
   }
   var dia = Number(m[1]);
   var mes = Number(m[2]);
   var ano = Number(m[3]);
-  var data = new Date(ano, mes - 1, dia, 12, 0, 0);
+  var data = new Date(ano, mes - 1, dia);
   if (data.getFullYear() !== ano || data.getMonth() !== mes - 1 || data.getDate() !== dia) {
     throw new Error("Data inválida");
   }
-  var range = sh.getRange(linha, 4);
-  range.setValue(data);
-  range.setNumberFormat("dd/MM/yyyy");
+  var formatada = ("0" + dia).slice(-2) + "/" + ("0" + mes).slice(-2) + "/" + ano;
+  range.setNumberFormat("@");
+  range.setValue(formatada);
 }
