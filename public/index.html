@@ -18,9 +18,10 @@
     </div>
     <div class="topo-acoes">
       <p class="sync" id="sync"></p>
+      <button type="button" class="btn btn-solido" id="btn-novo">Novo objetivo</button>
       <button type="button" class="btn" id="btn-atualizar">Atualizar</button>
       <button type="button" class="btn" id="btn-pauta">Copiar pauta</button>
-      <button type="button" class="btn btn-solido" id="btn-gravacao">Gravação</button>
+      <button type="button" class="btn" id="btn-gravacao">Gravação</button>
       <a class="btn" id="link-planilha" href="#" target="_blank" rel="noreferrer">Abrir planilha</a>
     </div>
   </header>
@@ -79,6 +80,61 @@
       <div class="modal-acoes">
         <button type="button" class="btn" id="btn-fechar-modal">Agora não</button>
         <button type="submit" class="btn btn-solido" id="btn-ativar">Ativar gravação</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modal-novo">
+    <form id="form-novo">
+      <h2>Novo objetivo</h2>
+      <p class="modal-texto">A linha entra no final da planilha. O título é obrigatório; o restante pode ficar em branco e ser completado depois.</p>
+      <div class="grade-edicao">
+        <label class="largo">O que fazer
+          <textarea id="novo-titulo" required placeholder="Descreva a ação ou o objetivo"></textarea>
+        </label>
+        <label>Status
+          <select id="novo-status"></select>
+        </label>
+        <label>Quando
+          <input id="novo-quando" placeholder="dd/mm/aaaa" />
+        </label>
+        <label>Divisão / assessoria
+          <input id="novo-divisao" list="lista-divisoes" />
+        </label>
+        <label>Responsável
+          <input id="novo-responsavel" list="lista-responsaveis" />
+        </label>
+        <label>Estratégia
+          <input id="novo-estrategia" list="lista-estrategias" />
+        </label>
+        <label>Apresentação
+          <input id="novo-apresentacao" list="lista-apresentacoes" />
+        </label>
+        <label class="largo">Medida de controle
+          <input id="novo-medida" />
+        </label>
+        <label>Eixo
+          <input id="novo-eixo" list="lista-eixos" />
+        </label>
+        <label>PE Governança
+          <input id="novo-pe" />
+        </label>
+        <label class="largo">Recursos humanos / materiais
+          <input id="novo-recursos" />
+        </label>
+        <label class="largo">Primeira anotação
+          <textarea id="novo-nota" placeholder="Opcional. Entra no acompanhamento com a data de hoje."></textarea>
+        </label>
+      </div>
+      <datalist id="lista-divisoes"></datalist>
+      <datalist id="lista-responsaveis"></datalist>
+      <datalist id="lista-estrategias"></datalist>
+      <datalist id="lista-apresentacoes"></datalist>
+      <datalist id="lista-eixos"></datalist>
+      <p class="erro" id="erro-novo"></p>
+      <div class="modal-acoes">
+        <button type="button" class="btn" id="btn-fechar-novo">Cancelar</button>
+        <button type="submit" class="btn btn-solido" id="btn-criar">Incluir na planilha</button>
       </div>
     </form>
   </dialog>

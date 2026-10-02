@@ -23,6 +23,7 @@ function responder_(obj) {
 
 function rotear_(pedido) {
   if (pedido.acao === "atualizar") return atualizar_(pedido);
+  if (pedido.acao === "criar") return criar_(pedido);
   return listar_();
 }
 
@@ -68,6 +69,42 @@ function listar_() {
     });
   }
   return { ok: true, atualizado: new Date().toISOString(), itens: itens };
+}
+
+function criar_(pedido) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var titulo = String(pedido.novoTitulo || "").trim();
+    if (!titulo) return { ok: false, erro: "O título não pode ficar vazio." };
+    var sh = aba_();
+    var linha = Math.max(sh.getLastRow() + 1, 2);
+    sh.getRange(linha, 1).setValue(String(pedido.status || "A Realizar"));
+    sh.getRange(linha, 2).setValue(titulo);
+    if (pedido.eixo != null && String(pedido.eixo).trim()) sh.getRange(linha, 3).setValue(String(pedido.eixo).trim());
+    if (pedido.quando != null && String(pedido.quando).trim()) gravarQuando_(sh, linha, String(pedido.quando));
+    if (pedido.recursos != null && String(pedido.recursos).trim()) sh.getRange(linha, 5).setValue(String(pedido.recursos).trim());
+    if (pedido.divisao != null && String(pedido.divisao).trim()) sh.getRange(linha, 6).setValue(String(pedido.divisao).trim());
+    if (pedido.medida != null && String(pedido.medida).trim()) sh.getRange(linha, 7).setValue(String(pedido.medida).trim());
+    if (pedido.responsavel != null && String(pedido.responsavel).trim()) sh.getRange(linha, 8).setValue(String(pedido.responsavel).trim());
+    if (pedido.estrategia != null && String(pedido.estrategia).trim()) sh.getRange(linha, 9).setValue(String(pedido.estrategia).trim());
+    if (pedido.pe != null && String(pedido.pe).trim()) sh.getRange(linha, 10).setValue(String(pedido.pe).trim());
+    if (pedido.apresentacao != null && String(pedido.apresentacao).trim()) sh.getRange(linha, 11).setValue(String(pedido.apresentacao).trim());
+    var acompanhamento = String(pedido.acompanhamento || "").trim();
+    var nota = String(pedido.nota || "").trim();
+    if (nota) {
+      var carimbo = Utilities.formatDate(new Date(), "America/Sao_Paulo", "dd/MM");
+      var linhaNota = "- Em " + carimbo + ": " + nota;
+      acompanhamento = acompanhamento ? acompanhamento + "\n" + linhaNota : linhaNota;
+    }
+    if (acompanhamento) sh.getRange(linha, 12).setValue(acompanhamento);
+    SpreadsheetApp.flush();
+    return { ok: true, linha: linha };
+  } catch (err) {
+    return { ok: false, erro: err.message || String(err) };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function atualizar_(pedido) {

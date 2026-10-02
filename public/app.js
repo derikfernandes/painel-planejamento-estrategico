@@ -716,6 +716,125 @@ document.addEventListener("input", (evento) => {
   state.rascunhos[fichaEl.dataset.linha] = lerRascunho(fichaEl.dataset.linha);
 });
 
+function valoresUnicos(campo) {
+  return [...new Set(state.itens.map((item) => String(item[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "pt")
+  );
+}
+
+function preencherDatalist(id, valores) {
+  $(id).innerHTML = valores.map((valor) => `<option value="${escapeHtml(valor)}"></option>`).join("");
+}
+
+function abrirNovo() {
+  if (!state.gravacao) {
+    abrirGravacao();
+    return;
+  }
+  $("erro-novo").textContent = "";
+  $("novo-titulo").value = "";
+  $("novo-status").innerHTML = opcoesStatus("A Realizar");
+  $("novo-quando").value = "";
+  $("novo-divisao").value = state.divisao || "";
+  $("novo-responsavel").value = "";
+  $("novo-estrategia").value = state.estrategia || "";
+  $("novo-apresentacao").value = state.apresentacao || "";
+  $("novo-medida").value = "";
+  $("novo-eixo").value = "";
+  $("novo-pe").value = "";
+  $("novo-recursos").value = "";
+  $("novo-nota").value = "";
+  preencherDatalist("lista-divisoes", valoresUnicos("divisao"));
+  preencherDatalist("lista-responsaveis", valoresUnicos("responsavel"));
+  preencherDatalist("lista-estrategias", valoresUnicos("estrategia"));
+  preencherDatalist("lista-apresentacoes", valoresUnicos("apresentacao"));
+  preencherDatalist("lista-eixos", valoresUnicos("eixo"));
+  $("modal-novo").showModal();
+  $("novo-titulo").focus();
+}
+
+async function criarObjetivo(evento) {
+  evento.preventDefault();
+  const titulo = $("novo-titulo").value.trim();
+  const quando = $("novo-quando").value.trim();
+  const aviso = $("erro-novo");
+  if (!titulo) {
+    aviso.textContent = "Informe o que fazer.";
+    return;
+  }
+  const erroData = validarQuando(quando, "");
+  if (erroData) {
+    aviso.textContent = erroData;
+    return;
+  }
+  const payload = {
+    comando: "criar",
+    novoTitulo: titulo,
+    status: $("novo-status").value || "A Realizar",
+  };
+  if (quando) payload.quando = quando;
+  const campos = [
+    ["divisao", "novo-divisao"],
+    ["responsavel", "novo-responsavel"],
+    ["estrategia", "novo-estrategia"],
+    ["apresentacao", "novo-apresentacao"],
+    ["medida", "novo-medida"],
+    ["eixo", "novo-eixo"],
+    ["pe", "novo-pe"],
+    ["recursos", "novo-recursos"],
+  ];
+  campos.forEach(([chave, id]) => {
+    const valor = $(id).value.trim();
+    if (valor) payload[chave] = valor;
+  });
+  const nota = $("novo-nota").value.trim();
+  if (nota) payload.nota = nota;
+  const botao = $("btn-criar");
+  botao.disabled = true;
+  botao.textContent = "Incluindo…";
+  aviso.textContent = "";
+  try {
+    const resposta = await fetch("/api/acoes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await resposta.json();
+    if (resposta.status === 409 && data.erro === "sem-script") {
+      $("modal-novo").close();
+      $("modal").showModal();
+      return;
+    }
+    if (!resposta.ok || data.ok === false) {
+      const texto = String(data.erro || "");
+      throw new Error(
+        texto.includes("<") || texto.length > 240
+          ? "A planilha pode ter gravado, mas o Google não devolveu a confirmação. Atualize o painel."
+          : texto || "Não foi possível incluir"
+      );
+    }
+    $("modal-novo").close();
+    toast("Objetivo incluído na planilha");
+    state.aberto = Number(data.linha) || null;
+    state.busca = "";
+    $("busca").value = "";
+    if (payload.divisao) state.divisao = payload.divisao;
+    await carregar();
+    if (state.aberto) {
+      const criado = state.itens.find((item) => item.linha === state.aberto);
+      if (criado) state.foco = situacaoDe(criado) === "prazo" ? "prazo" : situacaoDe(criado);
+      render();
+      const cartaoAberto = document.querySelector(`[data-abrir="${state.aberto}"]`);
+      if (cartaoAberto) cartaoAberto.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  } catch (error) {
+    aviso.textContent = error.message;
+  } finally {
+    botao.disabled = false;
+    botao.textContent = "Incluir na planilha";
+  }
+}
+
 $("busca").addEventListener("input", (evento) => {
   state.busca = evento.target.value;
   render();
@@ -735,6 +854,9 @@ $("horizonte").addEventListener("change", (evento) => {
   render();
 });
 $("btn-atualizar").addEventListener("click", carregar);
+$("btn-novo").addEventListener("click", abrirNovo);
+$("btn-fechar-novo").addEventListener("click", () => $("modal-novo").close());
+$("form-novo").addEventListener("submit", criarObjetivo);
 $("btn-gravacao").addEventListener("click", abrirGravacao);
 $("btn-fechar-modal").addEventListener("click", () => $("modal").close());
 $("btn-pauta").addEventListener("click", async () => {
