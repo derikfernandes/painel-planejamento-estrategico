@@ -48,7 +48,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/acoes") {
       const payload = await lerCorpo(req);
       try {
-        const comando = payload.comando === "criar" ? "criar" : "atualizar";
+        const comando = payload.comando === "criar" ? "criar" : payload.comando === "excluir" ? "excluir" : "atualizar";
         const data = await planilha.postarScript({ ...payload, acao: comando });
         planilha.limparCache();
         return send(res, 200, JSON.stringify(data));

@@ -11,7 +11,7 @@ module.exports = async function (req, res) {
     if (req.method === "POST") {
       try {
         const body = req.body || {};
-        const comando = body.comando === "criar" ? "criar" : "atualizar";
+        const comando = body.comando === "criar" ? "criar" : body.comando === "excluir" ? "excluir" : "atualizar";
         const data = await postarScript({ ...body, acao: comando });
         limparCache();
         res.status(200).json(data);

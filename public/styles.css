@@ -66,6 +66,13 @@ h1 {
 }
 .btn:hover { border-color: #c9bba6; }
 .btn-solido { background: var(--tinta); color: #fff; border-color: var(--tinta); }
+.btn-perigo {
+  background: transparent;
+  color: var(--vermelho);
+  border-color: #e4b4b8;
+  margin-right: auto;
+}
+.btn-perigo:hover { background: var(--vermelho-fundo); border-color: var(--vermelho); }
 .btn[aria-pressed="true"], .chip[aria-pressed="true"] { background: var(--tinta); color: #fff; border-color: var(--tinta); }
 .btn:disabled { opacity: 0.55; cursor: wait; }
 

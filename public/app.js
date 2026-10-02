@@ -288,6 +288,7 @@ function ficha(item) {
       <p class="regra-gravacao">O título e os comentários antigos só mudam pelo lápis e substituem a célula. A anotação nova é somada no final.</p>
       <p class="aviso" data-aviso></p>
       <div class="modal-acoes">
+        <button type="button" class="btn btn-perigo" data-excluir="${item.linha}">Excluir</button>
         <button type="button" class="btn btn-solido" data-salvar="${item.linha}">Salvar na planilha</button>
       </div>
     </div>`;
@@ -706,7 +707,12 @@ document.addEventListener("click", (evento) => {
     return;
   }
   const salvarBtn = evento.target.closest("[data-salvar]");
-  if (salvarBtn) salvar(Number(salvarBtn.dataset.salvar));
+  if (salvarBtn) {
+    salvar(Number(salvarBtn.dataset.salvar));
+    return;
+  }
+  const excluirBtn = evento.target.closest("[data-excluir]");
+  if (excluirBtn) excluir(Number(excluirBtn.dataset.excluir));
 });
 
 document.addEventListener("input", (evento) => {
@@ -751,6 +757,57 @@ function abrirNovo() {
   preencherDatalist("lista-eixos", valoresUnicos("eixo"));
   $("modal-novo").showModal();
   $("novo-titulo").focus();
+}
+
+async function excluir(linha) {
+  const item = state.itens.find((atual) => atual.linha === linha);
+  if (!item) return;
+  const aviso = document.querySelector(`.ficha[data-linha="${linha}"] [data-aviso]`);
+  const titulo = String(item.acao || "").replace(/\s+/g, " ").trim();
+  if (!window.confirm(`Excluir este objetivo da planilha?\n\n${titulo}\n\nA linha some de vez. Isso não tem desfazer.`)) return;
+  const botao = document.querySelector(`[data-excluir="${linha}"]`);
+  const salvar = document.querySelector(`[data-salvar="${linha}"]`);
+  if (botao) {
+    botao.disabled = true;
+    botao.textContent = "Excluindo…";
+  }
+  if (salvar) salvar.disabled = true;
+  if (aviso) aviso.textContent = "";
+  try {
+    const resposta = await fetch("/api/acoes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        comando: "excluir",
+        linha,
+        acaoEsperada: item.acao,
+      }),
+    });
+    const data = await resposta.json();
+    if (resposta.status === 409 && data.erro === "sem-script") {
+      $("modal").showModal();
+      return;
+    }
+    if (!resposta.ok || data.ok === false) {
+      const texto = String(data.erro || "");
+      throw new Error(
+        texto.includes("<") || texto.length > 240
+          ? "A planilha pode ter excluído, mas o Google não devolveu a confirmação. Atualize o painel."
+          : texto || "Não foi possível excluir"
+      );
+    }
+    delete state.rascunhos[linha];
+    state.aberto = null;
+    toast("Objetivo excluído da planilha");
+    await carregar();
+  } catch (error) {
+    if (aviso) aviso.textContent = error.message;
+    if (botao) {
+      botao.disabled = false;
+      botao.textContent = "Excluir";
+    }
+    if (salvar) salvar.disabled = false;
+  }
 }
 
 async function criarObjetivo(evento) {

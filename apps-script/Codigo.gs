@@ -24,6 +24,7 @@ function responder_(obj) {
 function rotear_(pedido) {
   if (pedido.acao === "atualizar") return atualizar_(pedido);
   if (pedido.acao === "criar") return criar_(pedido);
+  if (pedido.acao === "excluir") return excluir_(pedido);
   return listar_();
 }
 
@@ -139,6 +140,29 @@ function atualizar_(pedido) {
     }
     SpreadsheetApp.flush();
     return { ok: true };
+  } catch (err) {
+    return { ok: false, erro: err.message || String(err) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function excluir_(pedido) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var linha = Number(pedido.linha);
+    if (!linha || linha < 2) return { ok: false, erro: "Linha inválida" };
+    var sh = aba_();
+    var atual = textoCelula_(sh.getRange(linha, 2).getValue());
+    var esperada = String(pedido.acaoEsperada || "").replace(/\s+/g, " ").trim();
+    if (!esperada) return { ok: false, erro: "Título esperado ausente" };
+    if (atual.replace(/\s+/g, " ").trim() !== esperada) {
+      return { ok: false, erro: "Essa linha mudou na planilha. Atualize o painel e tente de novo." };
+    }
+    sh.deleteRow(linha);
+    SpreadsheetApp.flush();
+    return { ok: true, linha: linha };
   } catch (err) {
     return { ok: false, erro: err.message || String(err) };
   } finally {
